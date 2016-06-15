@@ -66,7 +66,7 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
     names(nr_char) <- filesIN
     namezone <- strsplit(substr(namefile,1,nr_char[namefile]-4), "_")[[1]][2]
     
-    print(paste("processing zone", namezone, sep=" "))
+    print(paste("processing zone", namezone, "for variable", variable, sep=" "))
     
     # read table 
     worktab <- read.table(file = file.path(wpath, datafolder, namefile), header = TRUE, sep = ",",dec = ".")
