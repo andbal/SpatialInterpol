@@ -168,10 +168,11 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           fac <- round(res(mask_A)[2]/npix,0)
           
           # resample to npix
-          if (res(mask_A)[2] != npix)
-          {
-            mask_A <- disaggregate(mask_A, fact=fac, method='')
-          }
+          if (res(mask_A)[2] < npix)
+          { mask_A <- aggregate(mask_A, fact=fac, method='') }
+          
+          if (res(mask_A)[2] > npix)
+          { mask_A <- disaggregate(mask_A, fact=fac, method='') }
           
         } else {
           
