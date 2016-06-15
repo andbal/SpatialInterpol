@@ -9,7 +9,7 @@
 
 OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig", 
                       datafolder = "raw", rastermask = "mask/Mask_master.tif",
-                      inverseDistWeigths = FALSE,
+                      inverseDistWeigths = FALSE, local=TRUE,
                       variable = "Humus____",  npix = 100,
                       cutoff = c("AdigeVenosta"=400, "Adige"=400, "Venosta"=450), 
                       anis_deg = c("AdigeVenosta"=0, "Adige"=0, "Venosta"=90), 
@@ -116,7 +116,7 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
         
         if (inverseDistWeigths) {
           
-          # Inverse Distance Weighting
+          # Inverse Distance Weighting (local only)
           ord_krig <- gstat::idw(formula = train_set$VARIABLE~1, locations = myloc, newdata = Xnew, idp = idp[namezone],
                                    nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = cutoff[namezone])
           
@@ -126,7 +126,7 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           
         } else {
           
-          # Ordinary Kriging
+          # Ordinary Kriging (local only)
           ord_krig <- gstat::krige(formula = train_set$VARIABLE~1, locations = myloc, newdata = Xnew, model = m,
                                    nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = m$range[2])
           
@@ -198,8 +198,15 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
         
         # Ordinary krigging (gstat)
         if (inverseDistWeigths) {
-          ord_krig <- gstat::idw(formula = worktab$VARIABLE~1, worktab, mask_sppxdf, idp = idp[namezone],
-                                 nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = cutoff[namezone])
+          
+          if (local) {
+            ord_krig <- gstat::idw(formula = worktab$VARIABLE~1, worktab, mask_sppxdf, idp = idp[namezone],
+                                   nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = cutoff[namezone])
+            locglob <- "local"
+          } else {
+            ord_krig <- gstat::idw(formula = worktab$VARIABLE~1, worktab, mask_sppxdf, idp = idp[namezone])
+            locglob <- "global"
+          }
           
           names(ord_krig) <- c("predict", "variance")
           
@@ -209,15 +216,24 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           # different possible formats see ?writeRaster
           dir.create(file.path(wpath, variable, "maps"), recursive = T)
           print("write .tif map files")
-          writeRaster(x = r_pred, filename = file.path(wpath, variable, "maps", paste(namezone, "_", variable, "_", npix, "_predict_sp_idw.tif",sep="")),
+          writeRaster(x = r_pred, filename = file.path(wpath, variable, "maps", paste(namezone, "_", variable, "_", npix, "_", locglob, "_predict_sp_idw.tif",sep="")),
                       overwrite=TRUE, format="GTiff")
           
-          val_list[[namezone]] <- list(krig = ord_krig)
+          val_list[[namezone]] <- list(krig = ord_krig, map_pred = r_pred)
           
         } else {
           
-          ord_krig <- gstat::krige(formula = worktab$VARIABLE~1, locations = worktab, newdata = mask_sppxdf, model = m,
-                                   nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = m$range[2])
+          if (local) {
+            ord_krig <- gstat::krige(formula = worktab$VARIABLE~1, locations = worktab, newdata = mask_sppxdf, model = m,
+                                     nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = m$range[2])
+            locglob <- "local"
+          } else {
+            ord_krig <- gstat::krige(formula = worktab$VARIABLE~1, locations = worktab, newdata = mask_sppxdf, model = m)
+            locglob <- "global"
+          }
+          
+          arg_spec <- paste(model, npix ,psill[namezone], cutoff[namezone], nugget[namezone], anis_deg[namezone], anis_ax[namezone],
+                            nmax[namezone], nmin[namezone], omax[namezone], sep="_")
           
           names(ord_krig) <- c("predict", "variance")
           
@@ -228,12 +244,12 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           # different possible formats see ?writeRaster
           dir.create(file.path(wpath, variable, "maps"), recursive = T)
           print("write .tif map files")
-          writeRaster(x = r_pred, filename = file.path(wpath, variable, "maps", paste(namezone, "_", variable, "_", npix, "_predict_sp_krige.tif",sep="")),
+          writeRaster(x = r_pred, filename = file.path(wpath, variable, "maps", paste(namezone, "_", variable, "_", locglob, "_predict_sp_krige_",arg_spec,".tif",sep="")),
                       overwrite=TRUE, format="GTiff")
-          writeRaster(x = r_vari, filename = file.path(wpath, variable, "maps", paste(namezone, "_", variable, "_", npix, "_variance_sp_krige.tif",sep="")),
+          writeRaster(x = r_vari, filename = file.path(wpath, variable, "maps", paste(namezone, "_", variable, "_", locglob, "_variance_sp_krige_",arg_spec,".tif",sep="")),
                       overwrite=TRUE, format="GTiff")
           
-          val_list[[namezone]] <- list(vario = my_var, vario_fit = my_var_fit, krig = ord_krig)
+          val_list[[namezone]] <- list(vario = my_var, vario_fit = my_var_fit, krig = ord_krig, map_pred = r_pred, map_var = r_vari)
         }
       
     }
