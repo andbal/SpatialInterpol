@@ -164,15 +164,19 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           mask <- raster(file.path(wpath, rastermask))
           # crop mask to data extent
           mask_A <- crop(mask,extent(worktab))
-          
-          fac <- round(res(mask_A)[2]/npix,0)
-          
+
           # resample to npix
           if (res(mask_A)[2] < npix)
-          { mask_A <- aggregate(mask_A, fact=fac, method='') }
+          {
+            fac <- round(npix/res(mask_A)[2],0)
+            mask_A <- aggregate(mask_A, fact=fac, method='')
+          }
           
           if (res(mask_A)[2] > npix)
-          { mask_A <- disaggregate(mask_A, fact=fac, method='') }
+          {
+            fac <- round(res(mask_A)[2]/npix,0)
+            mask_A <- disaggregate(mask_A, fact=fac, method='')
+          }
           
         } else {
           
