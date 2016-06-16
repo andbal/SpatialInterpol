@@ -8,7 +8,7 @@
 # library(SpatialPosition)
 
 OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig", 
-                      datafolder = "raw", rastermask = "mask/Mask_master.tif",
+                      datafolder = "master", rastermask = "mask/Mask_master.tif",
                       inverseDistWeigths = FALSE, local=TRUE,
                       variable = "Humus____",  npix = 100,
                       cutoff = c("AdigeVenosta"=400, "Adige"=400, "Venosta"=450), 
