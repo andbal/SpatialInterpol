@@ -11,7 +11,7 @@
 
 OrdKrig_optim_krige <- function(par = c(cutoff=300, anis_deg=0, anis_ax=.5, nmax=12, omax=3, nugget=1),
                                 wpath = "/home/jbre/R/OrdKrig", 
-                                datafile = "raw/Masterfile_Adige.txt",
+                                datafile = "master/Masterfile_AdigeVenosta.txt",
                                 variable = "Humus____",
                                 model="Sph", kfold=5)
 {

@@ -12,8 +12,7 @@
 OrdKrig_optim_idw <- function(par = c(idp = 2.0, maxdist=300, nmax=12, omax=3),
                                 wpath = "/home/jbre/R/OrdKrig", 
                                 datafile = "master/Masterfile_AdigeVenosta.txt",
-                                variable = "Humus____"
-                              )
+                                variable = "Humus____", kfold=5 )
 {
   # read table 
   worktab <- read.table(file = file.path(wpath, datafile), header = TRUE, sep = ",",dec = ".")
