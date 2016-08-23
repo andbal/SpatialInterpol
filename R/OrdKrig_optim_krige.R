@@ -48,7 +48,6 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, anis_deg=0, anis_ax=.5, nmax
     valid_set <- worktab[flds[[i]],]
     
     # Ordinary Kriging
-    
     Xnew <- valid_set[,c("X", "Y")]
     Xnew <- SpatialPoints(Xnew)
     
@@ -73,6 +72,6 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, anis_deg=0, anis_ax=.5, nmax
 # # How to solve?
 # 
 # hydroPSO::hydroPSO(fn = OrdKrig_optim_krige, method="spso2011",
-#                   lower = c(0,0,0.01,8,1,0), upper = c(1000,359,1,100,25,10),
-#                   control=list(drty.out = "/home/jbre/R/OrdKrig/PSO_krige", npart=40, 
-#                                parallel="none", par.pkgs = c("gstat","caret","hydroGOF","sp")))
+#                    lower = c(0,0,0.01,8,1,0), upper = c(1000,359,1,100,25,10),
+#                    control=list(drty.out = "/home/jbre/R/OrdKrig/PSO_krige", npart=40, 
+#                                 parallel="none", par.pkgs = c("gstat","caret","hydroGOF","sp")))

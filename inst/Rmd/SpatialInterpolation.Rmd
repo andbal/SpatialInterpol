@@ -43,7 +43,7 @@ if(!require("rgdal"))
   require("rgdal")
 }
 
-wpath <- "/home/jbre/Schreibtisch/krig/"
+wpath <- "H:/Projekte/MONALISA/04_Daten & Ergebnisse/10_Shiny/Rmd_kriging" #"/home/jbre/Schreibtisch/krig/"
 coordsys = "+proj=utm +zone=32 ellps=WGS84"
 
 masterfile <- dir(file.path(wpath,"master"), full.names = T)

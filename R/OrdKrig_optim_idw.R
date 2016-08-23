@@ -10,9 +10,10 @@
 # library(sp)
 
 OrdKrig_optim_idw <- function(par = c(idp = 2.0, maxdist=300, nmax=12, omax=3),
-                                wpath = "/home/jbre/R/OrdKrig", 
-                                datafile = "master/Masterfile_AdigeVenosta.txt",
-                                variable = "Humus____", kfold=5 )
+                              wpath = "/home/jbre/R/OrdKrig",
+                              datafile = "master/Masterfile_AdigeVenosta.txt",
+                              variable = "Humus____",
+                              model="Sph", kfold=5)
 {
   # read table 
   worktab <- read.table(file = file.path(wpath, datafile), header = TRUE, sep = ",",dec = ".")
@@ -40,7 +41,6 @@ OrdKrig_optim_idw <- function(par = c(idp = 2.0, maxdist=300, nmax=12, omax=3),
       valid_set <- worktab[flds[[i]],]
       
       # IDW
-      
       Xnew <- valid_set[,c("X", "Y")]
       Xnew <- SpatialPoints(Xnew)
       
@@ -68,4 +68,3 @@ OrdKrig_optim_idw <- function(par = c(idp = 2.0, maxdist=300, nmax=12, omax=3),
 #                    lower = c(1,100,8,1), upper = c(16,1000,100,25),
 #                    control=list(drty.out = "/home/jbre/R/OrdKrig/PSO_idw", npart=40, 
 #                                 parallel="none", par.pkgs = c("gstat","caret","hydroGOF","sp")))
-
