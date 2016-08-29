@@ -12,8 +12,8 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
                       inverseDistWeigths = FALSE, local=TRUE,
                       variable = "Humus____",  npix = 100,
                       cutoff = c("AdigeVenosta"=400, "Adige"=400, "Venosta"=450), 
-                      anis_deg = c("AdigeVenosta"=0, "Adige"=0, "Venosta"=90), 
-                      anis_ax = c("AdigeVenosta"=.5, "Adige"=.5, "Venosta"=.5),
+                      # anis_deg = c("AdigeVenosta"=0, "Adige"=0, "Venosta"=90), 
+                      # anis_ax = c("AdigeVenosta"=.5, "Adige"=.5, "Venosta"=.5),
                       psill = c("AdigeVenosta"=1, "Adige"=1, "Venosta"=1), 
                       nugget = c("AdigeVenosta"=1, "Adige"=1, "Venosta"=1),
                       nmax = c("AdigeVenosta"=12, "Adige"=12, "Venosta"=12), 
@@ -22,7 +22,8 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
                       idp = c("AdigeVenosta"=2.0, "Adige"=2.0, "Venosta"=2.0),
                       model="Sph",
                       validation = FALSE, kfold=5,
-                      coordsys = "+proj=utm +zone=32 ellps=WGS84"
+                      coordsys = "+proj=utm +zone=32 ellps=WGS84",
+                      tmp = "tmp"
                     )
 {
   
@@ -94,7 +95,6 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
         train_set <- worktab[-flds[[i]],]
         
         # train
-        
         if (!inverseDistWeigths)
         {
           # gstatVariogram - Calculate Sample variogram 
@@ -221,7 +221,7 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           # different possible formats see ?writeRaster
           dir.create(file.path(wpath, variable, "maps"), recursive = T)
           print("write .tif map files")
-          writeRaster(x = r_pred, filename = file.path(wpath, variable, "maps", paste(namezone, "_", variable, "_", npix, "_", locglob, "_predict_sp_idw.tif",sep="")),
+          writeRaster(x = r_pred, filename = file.path(wpath, variable, "maps", paste(namezone, "_", tmp, "_", npix, "_", locglob, "_predict_sp_idw.tif",sep="")),
                       overwrite=TRUE, format="GTiff")
           
           val_list[[namezone]] <- list(krig = ord_krig, map_pred = r_pred)
@@ -249,9 +249,9 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           # different possible formats see ?writeRaster
           dir.create(file.path(wpath, variable, "maps"), recursive = T)
           print("write .tif map files")
-          writeRaster(x = r_pred, filename = file.path(wpath, variable, "maps", paste(namezone, "_", variable, "_", locglob, "_predict_sp_krige_",arg_spec,".tif",sep="")),
+          writeRaster(x = r_pred, filename = file.path(wpath, variable, "maps", paste(namezone, "_", tmp, "_", locglob, "_predict_sp_krige_",arg_spec,".tif",sep="")),
                       overwrite=TRUE, format="GTiff")
-          writeRaster(x = r_vari, filename = file.path(wpath, variable, "maps", paste(namezone, "_", variable, "_", locglob, "_variance_sp_krige_",arg_spec,".tif",sep="")),
+          writeRaster(x = r_vari, filename = file.path(wpath, variable, "maps", paste(namezone, "_", tmp, "_", locglob, "_variance_sp_krige_",arg_spec,".tif",sep="")),
                       overwrite=TRUE, format="GTiff")
           
           val_list[[namezone]] <- list(vario = my_var, vario_fit = my_var_fit, krig = ord_krig, map_pred = r_pred, map_var = r_vari)
