@@ -17,8 +17,8 @@
 ################################################################################
 
 # Input path and file
-wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
-datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
+# wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
+# datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
 vars = list("Humus____","pH_Wert__i","Karbonate_","Kalkbedarf","Phosphat__",
             "Kali__K_O_","Magnesium_","Bor__B__im","Mangan__Mn","Kupfer__Cu","Zink__Zn__")
 
