@@ -4,7 +4,11 @@
 #    exclude from the original dataset a user-specified percentual of data and
 #    create a new "cutted" dataset that could be used for training/interpolation
 # 2) 'use' == 'validation'
-#    given the original (full) dataset, perform 
+#    given the original (full) dataset, perform
+
+#################
+# SCRIPT TO COMPLETE
+#################
 
 OrdKrig_tools <- function (wpath = "/home/jbre/R/OrdKrig",
                            datafolder = "master", rastermask = "mask/Mask_master.tif",
@@ -72,7 +76,7 @@ if (!use %in% use_type)
 # check parameter for working mode 'fold'
 if (use == use_type[1])
 {
-    if (!is.numeric(perc) | ( perc < 0 | perc > 1 )
+    if (!is.numeric(perc) | ( perc < 0 | perc > 1 ) )
     {
         stop("'perc' parameter is incorrect. Must be in the interval [0,1]")
         }
