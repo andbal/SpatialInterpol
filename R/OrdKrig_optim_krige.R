@@ -130,7 +130,7 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, nmin=1, omax=3),
                                                      my_var_fit$range[2], k,
                                                      rms_fold, r2_fold[1], r2_fold[2]) )
         }# end loop on folds
-        names(mydata_fold) <- c("fold","model","psill","nugget","rad_fit","range_mod","RMSE","R2","Adj. R2")    
+        names(mydata_fold) <- c("fold","model","psill","nugget","rad_fit","range_exp","RMSE","R2","adj_R2")    
         
         # Create set of parameters as average of values got from 10 folds
         par_new <- as.numeric(apply(X = mydata_fold[-c(1:2)],MARGIN = 2,FUN = mean))
