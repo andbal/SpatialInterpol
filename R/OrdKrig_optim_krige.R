@@ -74,7 +74,7 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
     # for (k in range_vario)
     # {
     ### OR ###
-    k=par["cutoff"]
+    k=par[1]
     ###
     
         val_fold_df <- data.frame()
@@ -113,8 +113,8 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
         
         if (local){    
             ord_krig <- krige(formula = train_set$VARIABLE~1, locations = myloc, newdata = Xnew,
-                              model = my_var_fit, nmax = par["nmax"], nmin = par_kri["nmin"],
-                              omax = par["omax"], maxdist = par_kri["radius"] ) #maxdist = my_var_fit$range[2]
+                              model = my_var_fit, nmax = par[2], nmin = par_kri[2],
+                              omax = par[3], maxdist = par_kri[1] ) #maxdist = my_var_fit$range[2]
         } else {
             ord_krig <- krige(formula = train_set$VARIABLE~1, locations = myloc, newdata = Xnew, model = my_var_fit )
         }

@@ -1,6 +1,13 @@
+#library("devtools")
+#install_git("https://gitlab.inf.unibz.it/Samuel.Senoner/hydroPSO.git")
+#install_git("https://github.com/andbal/SpatialInterpol.git")
+#library(SpatialInterpol)
+
 # choose variables to use from colnames of namefile (see below)
-# "Bodenart__" "Humus____"  "pH_Wert__i" "Karbonate_" "Kalkbedarf" "Phosphat__" "Kali__K_O_" "Magnesium_" "Bor__B__im" "Mangan__Mn" "Kupfer__Cu" "Zink__Zn__" "NUM"       
-# "ID_string"  "ID_suolo"   "Num_Soil"   "Soil_newCl" "Schluff"    "Tonig"      "Sand"
+# "Humus____"  "pH_Wert__i" "Karbonate_" "Kalkbedarf" "Phosphat__" "Kali__K_O_" "Magnesium_" "Bor__B__im" "Mangan__Mn" "Kupfer__Cu" "Zink__Zn__"
+
+# wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
+# datafolder = "master/original_dataset"
 
 # library(gstat)
 # library(raster)
