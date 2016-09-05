@@ -1,19 +1,22 @@
-# Optimistation function for ordinary kriging
+# Optimisation function for ordinary kriging
 
 # choose variables to use from colnames of namefile (see below)
-# "Bodenart__" "Humus____"  "pH_Wert__i" "Karbonate_" "Kalkbedarf" "Phosphat__" "Kali__K_O_" "Magnesium_" "Bor__B__im" "Mangan__Mn" "Kupfer__Cu" "Zink__Zn__" "NUM"       
-# "ID_string"  "ID_suolo"   "Num_Soil"   "Soil_newCl" "Schluff"    "Tonig"      "Sand"
+# "Humus____" "pH_Wert__i" "Karbonate_" "Kalkbedarf" "Phosphat__" "Kali__K_O_" "Magnesium_" "Bor__B__im" "Mangan__Mn" "Kupfer__Cu" "Zink__Zn__"
 
 # wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
 # datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
 
 # PAR       default     range
-#cutoff     300         200-1600/2000
-#nmax       12          4-120
-#nmin       1           1-3
-#omax       3           1-30
-#psill      0.9         0-10
-#nugget     0.1         0-1
+#cutoff     300         200-1600/2000   -> range for experimental variogram
+#nmax       12          4-120           -> maximum number of points inside range (krigin interpolation)
+#omax       3           1-30            -> maximum number of points in each quadrant (krigin interpolation)
+# NOT USED IN CURRENT VERSION
+#psill      0.9         0-10            -> partial sill for experimental variogram
+#nugget     0.1         0-1             -> nugget for experimental variogram
+
+# FIXED PAR
+#radius     3000    -> range for krigin interpolation, not for variogram and model
+#nmin       1       -> minimum number of points inside range (krigin interpolation)
 
 ### IMPORTANT NOTE
 # "Model" need to be tested one at time!!!
@@ -25,26 +28,26 @@ library(caret)
 # library(hydroPSO)
 library(sp)
 
-OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, nmin=1, omax=3),
-                                wpath = "/home/jbre/R/OrdKrig",
-                                datafile = "master/Masterfile_AdigeVenosta.txt",
+OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
+                                par_kri = c(radius = 3000, nmin=1),
+                                wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps",
+                                datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt",
                                 variable = "Humus____", local = TRUE,
-                                interp_radius = 3000,
                                 model = c("Exp"), kfold = 10 )
 {
     # # to comment for the function version
-    # par = c(cutoff=300, nmax=12, nmin=1, omax=3, psill=0.9, nugget=0.1)
+    # par = c(cutoff=300, nmax=12, omax=3, psill=0.9, nugget=0.1)
+    # par_kri = c(radius = 3000, nmin=1)
     # wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
     # datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
     # variable = "Humus____"
-    # interp_radius = 3000
     # kfold=10
     # local=TRUE
     # # Need to be tested one at time!!!
     # # Every fold may use a different model, and at the enf make no sense
-    # # do average on parameters related to different model    
+    # # do average on parameters related to different model
     # model=c("Exp")#,"Sph")
-    ###
+    # ###
     
     # read table 
     worktab <- read.table(file = file.path(wpath, datafile), header = TRUE, sep = ",",dec = ".")
@@ -70,7 +73,9 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, nmin=1, omax=3),
     # 
     # for (k in range_vario)
     # {
-    k=par[1]
+    ### OR ###
+    k=par["cutoff"]
+    ###
     
         val_fold_df <- data.frame()
         val_out_df  <- data.frame()
@@ -107,8 +112,9 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, nmin=1, omax=3),
         myloc <- SpatialPoints(myloc)
         
         if (local){    
-            ord_krig <- krige(formula = train_set$VARIABLE~1, locations = myloc, newdata = Xnew, model = my_var_fit,
-                              nmax = par[2], nmin = par[3], omax = par[4], maxdist = interp_radius ) #maxdist = my_var_fit$range[2]
+            ord_krig <- krige(formula = train_set$VARIABLE~1, locations = myloc, newdata = Xnew,
+                              model = my_var_fit, nmax = par["nmax"], nmin = par_kri["nmin"],
+                              omax = par["omax"], maxdist = par_kri["radius"] ) #maxdist = my_var_fit$range[2]
         } else {
             ord_krig <- krige(formula = train_set$VARIABLE~1, locations = myloc, newdata = Xnew, model = my_var_fit )
         }
@@ -132,10 +138,11 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, nmin=1, omax=3),
         }# end loop on folds
         names(mydata_fold) <- c("fold","model","psill","nugget","rad_fit","range_exp","RMSE","R2","adj_R2")    
         
-        # Create set of parameters as average of values got from 10 folds
+        # Create set of parameters/statistics as average of values got from 10 folds
         par_new <- as.numeric(apply(X = mydata_fold[-c(1:2)],MARGIN = 2,FUN = mean))
         par_new <- data.frame(as.character(my_var_fit$model[2]), t(par_new),
-                            as.numeric(par[2]), as.numeric(par[3]), as.numeric(par[4]),stringsAsFactors = F )
+                              as.numeric(par["nmax"]), as.numeric(par_kri["nmin"]),
+                              as.numeric(par["omax"]), stringsAsFactors = F )
         colnames(par_new) <- c("model","psill","nugget","rad_fit","rad_mod","rmse","r2","adj_r2","nmax","nmin","omax")
         
         # statistics for ALL folds
@@ -146,30 +153,35 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, nmin=1, omax=3),
         # add statistics
         par_new <- data.frame(par_new,rms_alldata=rms,r2_alldata=r2[1],adj_r2_alldata=r2[2])
         mydata_out <- rbind(mydata_out, par_new)
-        # write output
+        
+        # # write output (result of each fold computation)
         # print(paste("Write summary for distance ",k))
         # write.csv(x = mydata_fold,file = paste(var_name,"_x",k,"_10fold_",model,"_tab.csv",sep = ""), row.names = F,quote = F)
     
+    # #
     # }# end loop on variogram distance
+    # ###
     
-    # write output
+    # write output (parameters as average on folds)
     print("Write total summary")
     write.csv(x = mydata_out,file = paste(var_name,"_10fold_",model,".csv",sep = ""), row.names = F,quote = F)
     
+    # #
     # var_tot <- variogram(log(VARIABLE)~1,data = worktab,locations = ~X+Y,cutoff = par[1])#, width=par[1]/100)
     # mod_tot <- vgm(psill = par_new$psill,model = par_new$model,nugget = par_new$nugget,range = par_new$range)
     # var_tot <- my_var # NON serve, basta solo il modello per interp. kriging
     # mod_tot <- vgm(psill = par_new$psill, model = par_new$model,
     #                nugget = par_new$nugget, range = par_new$rad_fit) )
     # plot(var_tot,model=mod_tot,main =paste("RMSE: ",rms) )
+    ###
     
     # return(RMSE(pred = val_out_df$ord_krig.predict, obs = val_out_df$VARIABLE, na.rm = T))
     return(r2[1])
 }
 
-# # keep care: trade of between search distance and number of NA estimations
-# # the smaller the search radius, the better the estimation - but lot of NAs
-# # How to solve?
+## keep care: trade of between search distance and number of NA estimations
+## the smaller the search radius, the better the estimation - but lot of NAs
+## How to solve?
 #
 # hydroPSO::hydroPSO(fn = OrdKrig_optim_krige, method="spso2011",
 #                    lower = c(0,0,0.01,8,1,0), upper = c(1000,359,1,100,25,10),
