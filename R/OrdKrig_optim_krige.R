@@ -163,8 +163,11 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
     # ###
     
     # write output (parameters as average on folds)
+    dir.create(file.path(getwd(), var_name), recursive = T)
     print("Write total summary")
-    write.csv(x = mydata_out,file = paste(var_name,"_",par[1],"_",par[2],"_",par[3],"_",model,".csv",sep = ""), row.names = F,quote = F)
+    write.csv(x = mydata_out,
+              file = file.path(getwd(), var_name,
+                               paste(var_name,"_",par[1],"_",par[2],"_",par[3],"_",model,".csv",sep = "")), row.names = F,quote = F)
     
     # #
     # var_tot <- variogram(log(VARIABLE)~1,data = worktab,locations = ~X+Y,cutoff = par[1])#, width=par[1]/100)
