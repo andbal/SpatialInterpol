@@ -167,7 +167,8 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
     print("Write total summary")
     write.csv(x = mydata_out,
               file = file.path(getwd(), var_name,
-                               paste(var_name,"_",par[1],"_",par[2],"_",par[3],"_",model,".csv",sep = "")), row.names = F,quote = F)
+                               paste(var_name,"_",par[1],"_",par[2],"_",par[3],"_",model,".csv",sep = "")),
+              row.names = F,quote = F )
     
     # #
     # var_tot <- variogram(log(VARIABLE)~1,data = worktab,locations = ~X+Y,cutoff = par[1])#, width=par[1]/100)
@@ -185,6 +186,11 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
 ## keep care: trade of between search distance and number of NA estimations
 ## the smaller the search radius, the better the estimation - but lot of NAs
 ## How to solve?
+## Solved because radius of variogram and interpolation are different! Variogram
+## radius explain correlation between points -> will vary for each variables.
+## Interpolation radius define the search area in which point where selected
+## and used to interpolate a single pixel (following the model defined by
+## variogram) -> could be choosen as fixed value
 #
 # hydroPSO::hydroPSO(fn = OrdKrig_optim_krige, method="spso2011",
 #                    lower = c(0,0,0.01,8,1,0), upper = c(1000,359,1,100,25,10),

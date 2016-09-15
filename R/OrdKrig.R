@@ -17,19 +17,24 @@
 OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig", 
                       datafolder = "master", rastermask = "mask/Mask_master.tif",
                       inverseDistWeigths = FALSE, local=TRUE,
-                      variable = "Humus____",  npix = 100,
+                      variable = "Humus____",
+                      # variogram model parameters,
+                      model="Exp",
                       cutoff = c("AdigeVenosta"=400, "Adige"=400, "Venosta"=450), 
-                      # anis_deg = c("AdigeVenosta"=0, "Adige"=0, "Venosta"=90), 
-                      # anis_ax = c("AdigeVenosta"=.5, "Adige"=.5, "Venosta"=.5),
-                      psill = c("AdigeVenosta"=1, "Adige"=1, "Venosta"=1), 
+                      psill = c("AdigeVenosta"=0.11, "Adige"=0.1, "Venosta"=0.1), 
                       nugget = c("AdigeVenosta"=1, "Adige"=1, "Venosta"=1),
+                      # anisotropy not implemented,
+                      anis_deg = c("AdigeVenosta"=0, "Adige"=0, "Venosta"=90), 
+                      anis_ax = c("AdigeVenosta"=.5, "Adige"=.5, "Venosta"=.5),
+                      # idw/kriging interpolator parameters,
+                      radius = c("AdigeVenosta"=3000, "Adige"=3000, "Venosta"=3000),
                       nmax = c("AdigeVenosta"=12, "Adige"=12, "Venosta"=12), 
                       nmin = c("AdigeVenosta"=1, "Adige"=1, "Venosta"=1),
                       omax = c("AdigeVenosta"=3, "Adige"=3, "Venosta"=3),
                       idp = c("AdigeVenosta"=2.0, "Adige"=2.0, "Venosta"=2.0),
-                      model="Sph",
-                      validation = FALSE, kfold=5,
-                      coordsys = "+proj=utm +zone=32 ellps=WGS84",
+                      coordsys = "+proj=utm +zone=32 ellps=WGS84", npix = 100,
+                      # validation parameters,
+                      validation = FALSE, kfold=10,
                       tmp = "tmp"
                     )
 {
@@ -49,8 +54,9 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
     }
     
     # list of arguments
+    ### TO DIFFERENTIATE ON THE INTERPOLATION CHOOSEN
     args <- list("cutoff"=cutoff, "anis_deg"=anis_deg,"anis_ax"=anis_ax,"psill"=psill,
-                 "nugget"=nugget,"nmax"=nmax,"nmin"=nmin,"idp"=idp)
+                 "nugget"=nugget,"radius"=radius,"nmax"=nmax,"nmin"=nmin,"omax"=omax,"idp"=idp)
     
     # assing argument names to parameter value (named vector)
     for (arg in 1:length(args))
@@ -154,11 +160,12 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
       # Choose parameters as function arguments
       
       # gstatVariogram - Calculate Sample variogram 
-      my_var <- variogram(log(VARIABLE)~1, data=worktab, locations = ~X+Y, cutoff = cutoff[namezone])
+      # my_var <- variogram(log(VARIABLE)~1, data=worktab, locations = ~X+Y, cutoff = cutoff[namezone])
       # Fit a Variogram Model to a Sample Variogram  
-      m <- vgm(psill = psill[namezone], model = model, range = cutoff[namezone], nugget = nugget[namezone], 
-               anis = c(anis_deg[namezone], anis_ax[namezone]))
-      my_var_fit <- fit.variogram(my_var, m)
+      # m <- vgm(psill = psill[namezone], model = model, range = cutoff[namezone], nugget = nugget[namezone], 
+      #          anis = c(anis_deg[namezone], anis_ax[namezone]))
+      # my_var_fit <- fit.variogram(my_var, m)
+        my_var_fit <- vgm(psill = psill[namezone], model = model, range = cutoff[namezone], nugget = nugget[namezone])
     }
  
       coordinates(worktab) <- ~X+Y
@@ -208,9 +215,9 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
         #Xnew <- SpatialPoints(coordinates(mask_A)[!is.na(values(mask_A)),])
         #crs(Xnew) <- coordsys
         
-        # Ordinary krigging (gstat)
+        # Interpolation (gstat)
         if (inverseDistWeigths) {
-          
+          # IDW
           if (local) {
             ord_krig <- gstat::idw(formula = worktab$VARIABLE~1, worktab, mask_sppxdf, idp = idp[namezone],
                                    nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = cutoff[namezone])
@@ -221,7 +228,6 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           }
           
           names(ord_krig) <- c("predict", "variance")
-          
           r_pred <- raster(ord_krig["predict"])
           
           # export raster as GeoTiff
@@ -234,18 +240,20 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           val_list[[namezone]] <- list(krig = ord_krig, map_pred = r_pred)
           
         } else {
-          
+          # Ordinary Kriging
           if (local) {
-            ord_krig <- gstat::krige(formula = worktab$VARIABLE~1, locations = worktab, newdata = mask_sppxdf, model = m,
-                                     nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = m$range[2])
+            ord_krig <- gstat::krige(formula = worktab$VARIABLE~1, locations = worktab, newdata = mask_sppxdf, model = my_var_fit,
+                                     nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = radius[namezone])
             locglob <- "local"
           } else {
-            ord_krig <- gstat::krige(formula = worktab$VARIABLE~1, locations = worktab, newdata = mask_sppxdf, model = m)
+            ord_krig <- gstat::krige(formula = worktab$VARIABLE~1, locations = worktab, newdata = mask_sppxdf, model = my_var_fit)
             locglob <- "global"
           }
           
-          arg_spec <- paste(model, npix ,psill[namezone], cutoff[namezone], nugget[namezone], anis_deg[namezone], anis_ax[namezone],
-                            nmax[namezone], nmin[namezone], omax[namezone], sep="_")
+          arg_out <- format(x=c(cutoff[namezone],psill[namezone],nugget[namezone],
+                                nmax[namezone],omax[namezone]),digits = 4,trim = T )
+          arg_spec <- paste(model, npix, arg_out[1], arg_out[2], arg_out[3], radius[namezone],
+                            arg_out[4], nmin[namezone], arg_out[5], sep="_")
           
           names(ord_krig) <- c("predict", "variance")
           
@@ -261,7 +269,8 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           writeRaster(x = r_vari, filename = file.path(wpath, variable, "maps", paste(namezone, "_", tmp, "_", locglob, "_variance_sp_krige_",arg_spec,".tif",sep="")),
                       overwrite=TRUE, format="GTiff")
           
-          val_list[[namezone]] <- list(vario = my_var, vario_fit = my_var_fit, krig = ord_krig, map_pred = r_pred, map_var = r_vari)
+          # val_list[[namezone]] <- list(vario = my_var, vario_fit = my_var_fit, krig = ord_krig, map_pred = r_pred, map_var = r_vari)
+          val_list[[namezone]] <- list( vario_fit = my_var_fit, krig = ord_krig, map_pred = r_pred, map_var = r_vari)
         }
       
     }
