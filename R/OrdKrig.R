@@ -81,7 +81,7 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
     names(nr_char) <- filesIN
     namezone <- strsplit(substr(namefile,1,nr_char[namefile]-4), "_")[[1]][2]
     
-    print(paste("processing zone", namezone, "for variable", variable, sep=" "))
+    print(paste("processing zone", namezone, "for variable", var_name, sep=" "))
     
     # read table 
     worktab <- read.table(file = file.path(wpath, datafolder, namefile), header = TRUE, sep = ",",dec = ".")
@@ -281,12 +281,12 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
     }
     
   if (validation) {
-    if (inverseDistWeigths) save(list = "val_list", file = file.path(wpath, variable, "validation_idw.RData"))
-    if (!inverseDistWeigths) save(list = "val_list", file = file.path(wpath, variable, "validation_krige.RData"))
+    if (inverseDistWeigths) save(list = "val_list", file = file.path(wpath, var_name, "validation_idw.RData"))
+    if (!inverseDistWeigths) save(list = "val_list", file = file.path(wpath, var_name, "validation_krige.RData"))
     return(val_list)
   } else {
-    if (inverseDistWeigths) save(list = "val_list", file = file.path(wpath, variable, "NOvalidation_idw.RData"))
-    if (!inverseDistWeigths) save(list = "val_list", file = file.path(wpath, variable, "NOvalidation_krige.RData"))
+    if (inverseDistWeigths) save(list = "val_list", file = file.path(wpath, var_name, "NOvalidation_idw.RData"))
+    if (!inverseDistWeigths) save(list = "val_list", file = file.path(wpath, var_name, "NOvalidation_krige.RData"))
     return(val_list)
   }
   
