@@ -72,6 +72,7 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
   }
     
   val_list <- list()
+  var_name = strsplit(x = variable,split = "_")[[1]][1]
   
   for (namefile in filesIN)
   {
@@ -165,6 +166,7 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
       # m <- vgm(psill = psill[namezone], model = model, range = cutoff[namezone], nugget = nugget[namezone], 
       #          anis = c(anis_deg[namezone], anis_ax[namezone]))
       # my_var_fit <- fit.variogram(my_var, m)
+        # Create model for variogram from calibration parameters (user input)
         my_var_fit <- vgm(psill = psill[namezone], model = model, range = cutoff[namezone], nugget = nugget[namezone])
     }
  
@@ -227,14 +229,15 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
             locglob <- "global"
           }
           
+          # TO CHECK if two names give rise to problem
           names(ord_krig) <- c("predict", "variance")
           r_pred <- raster(ord_krig["predict"])
           
           # export raster as GeoTiff
           # different possible formats see ?writeRaster
-          dir.create(file.path(wpath, variable, "maps"), recursive = T)
+          dir.create(file.path(wpath, var_name, "maps"), recursive = T)
           print("write .tif map files")
-          writeRaster(x = r_pred, filename = file.path(wpath, variable, "maps", paste(namezone, "_", tmp, "_", npix, "_", locglob, "_predict_sp_idw.tif",sep="")),
+          writeRaster(x = r_pred, filename = file.path(wpath, var_name, "maps", paste(var_name,"_", npix, "_", locglob, "_predict_sp_idw.tif",sep="")),
                       overwrite=TRUE, format="GTiff")
           
           val_list[[namezone]] <- list(krig = ord_krig, map_pred = r_pred)
@@ -262,11 +265,11 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           
           # export raster as GeoTiff
           # different possible formats see ?writeRaster
-          dir.create(file.path(wpath, variable, "maps"), recursive = T)
+          dir.create(file.path(wpath, var_name, "maps"), recursive = T)
           print("write .tif map files")
-          writeRaster(x = r_pred, filename = file.path(wpath, variable, "maps", paste(namezone, "_", tmp, "_", locglob, "_predict_sp_krige_",arg_spec,".tif",sep="")),
+          writeRaster(x = r_pred, filename = file.path(wpath, var_name, "maps", paste(var_name,"_", locglob, "_predict_sp_krige_",arg_spec,".tif",sep="")),
                       overwrite=TRUE, format="GTiff")
-          writeRaster(x = r_vari, filename = file.path(wpath, variable, "maps", paste(namezone, "_", tmp, "_", locglob, "_variance_sp_krige_",arg_spec,".tif",sep="")),
+          writeRaster(x = r_vari, filename = file.path(wpath, var_name, "maps", paste(var_name,"_", locglob, "_variance_sp_krige_",arg_spec,".tif",sep="")),
                       overwrite=TRUE, format="GTiff")
           
           # val_list[[namezone]] <- list(vario = my_var, vario_fit = my_var_fit, krig = ord_krig, map_pred = r_pred, map_var = r_vari)
