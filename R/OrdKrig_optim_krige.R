@@ -1,22 +1,22 @@
 # Optimisation function for ordinary kriging
 
 # choose variables to use from colnames of namefile (see below)
-# "Humus____" "pH_Wert__i" "Karbonate_" "Kalkbedarf" "Phosphat__" "Kali__K_O_" "Magnesium_" "Bor__B__im" "Mangan__Mn" "Kupfer__Cu" "Zink__Zn__"
+# "Bor__B__im","Humus____","Kali__K_O_","Kalkbedarf","Karbonate_","Kupfer__Cu","Magnesium_","Mangan__Mn","Phosphat__","pH_Wert__i","Zink__Zn__"
 
 # wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
 # datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
 
 # PAR       default     range
 #cutoff     300         200-1600/2000   -> range for experimental variogram
-#nmax       12          4-120           -> maximum number of points inside range (krigin interpolation)
-#omax       3           1-30            -> maximum number of points in each quadrant (krigin interpolation)
+#nmax       12          4-120           -> maximum number of points inside range (kriging interpolation)
+#omax       3           1-30            -> maximum number of points in each quadrant (kriging interpolation)
 # NOT USED IN CURRENT VERSION
 #psill      0.9         0-10            -> partial sill for experimental variogram
 #nugget     0.1         0-1             -> nugget for experimental variogram
 
 # FIXED PAR
-#radius     3000    -> range for krigin interpolation, not for variogram and model
-#nmin       1       -> minimum number of points inside range (krigin interpolation)
+#radius     3000    -> range for kriging interpolation, not for variogram and model
+#nmin       1       -> minimum number of points inside range (kriging interpolation)
 
 ### IMPORTANT NOTE
 # "Model" need to be tested one at time!!!
@@ -29,23 +29,23 @@ library(caret)
 library(sp)
 
 OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
-                                par_kri = c(radius = 3000, nmin=1),
+                                par_intp = c(radius = 3000, nmin=1),
                                 wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps",
                                 datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt",
                                 variable = "Humus____", local = TRUE,
                                 model = c("Exp"), kfold = 10 )
 {
     # # to comment for the function version
-    # par = c(cutoff=300, nmax=12, omax=3, psill=0.9, nugget=0.1)
-    # par_kri = c(radius = 3000, nmin=1)
+    # par = c(cutoff=1500, nmax=12, omax=3, psill=0.9, nugget=0.1)
+    # par_intp = c(radius = 3000, nmin=1)
     # wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
     # datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
-    # variable = "Humus____"
+    # variable = "Kalkbedarf"
     # kfold=10
     # local=TRUE
-    # # Need to be tested one at time!!!
-    # # Every fold may use a different model, and at the enf make no sense
-    # # do average on parameters related to different model
+    # Need to be tested one at time!!!
+    # Every fold may use a different model, and at the enf make no sense
+    # do average on parameters related to different model
     # model=c("Exp")#,"Sph")
     # ###
     
@@ -87,6 +87,9 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
         train_set <- worktab[-flds[[i]],]
         # validation set
         valid_set <- worktab[flds[[i]],]
+        # variable to check fitting singularity [0/FALSE=no singular, 1/TRUE=singular]
+        sing_fold <- 0
+        sing_all <- FALSE
         
         # gstatVariogram - Calculate experimental variogram and fit a model on it
         if (local){
@@ -104,7 +107,7 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
             m <- vgm(model)
             my_var_fit <- fit.variogram(my_var, m)
         }
-        
+
         # Ordinary Kriging
         Xnew <- valid_set[,c("X", "Y")]
         Xnew <- SpatialPoints(Xnew)
@@ -113,20 +116,30 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
         
         if (local){    
             ord_krig <- krige(formula = train_set$VARIABLE~1, locations = myloc, newdata = Xnew,
-                              model = my_var_fit, nmax = par[2], nmin = par_kri[2],
-                              omax = par[3], maxdist = par_kri[1] ) #maxdist = my_var_fit$range[2]
+                              model = my_var_fit, nmax = par[2], nmin = par_intp[2],
+                              omax = par[3], maxdist = par_intp[1] ) #maxdist = my_var_fit$range[2]
         } else {
             ord_krig <- krige(formula = train_set$VARIABLE~1, locations = myloc, newdata = Xnew, model = my_var_fit )
         }
+
         names(ord_krig) <- c("predict", "variance")
         
         # frame with original data + predicted for ACTUAL fold
         val_fold_df <- data.frame(fold=i,valid_set, ord_krig$predict, ord_krig$variance)
         
         # Statistics for ACTUAL fold
-        rms_fold <- RMSE(pred = val_fold_df$ord_krig.predict, obs = val_fold_df$VARIABLE, na.rm = T)
-        r2_fold <- lm(formula = ord_krig.predict~VARIABLE, data = val_fold_df)
-        r2_fold <- c(summary(r2_fold)$r.squared,summary(r2_fold)$adj.r.squared)
+        # force statistic as NAs in case of singular fit. Necessary to avoid error in lm function.
+        if (attributes(my_var_fit)$singular){
+            print(paste("Singular fit for distance ",k,". Interpolation statistics will be set to NAs.",sep = ""))
+            rms_fold <- NA
+            r2_fold <- c(NA,NA)
+            sing_fold <- 1
+        } else {
+            rms_fold <- RMSE(pred = val_fold_df$ord_krig.predict, obs = val_fold_df$VARIABLE, na.rm = T)
+            r2_fold <- lm(formula = ord_krig.predict~VARIABLE, data = val_fold_df)
+            r2_fold <- c(summary(r2_fold)$r.squared,summary(r2_fold)$adj.r.squared)
+            sing_fold <- 0
+        }
         
         # frame with original data + frame with predicted for ALL folds
         val_out_df <- rbind(val_out_df, val_fold_df)
@@ -134,23 +147,29 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
                                                      my_var_fit$psill[2],
                                                      my_var_fit$psill[1],
                                                      my_var_fit$range[2], k,
-                                                     rms_fold, r2_fold[1], r2_fold[2]) )
+                                                     rms_fold, r2_fold[1], r2_fold[2],
+                                                     sing_fold) )
         }# end loop on folds
-        names(mydata_fold) <- c("fold","model","psill","nugget","rad_fit","range_exp","RMSE","R2","adj_R2")    
+        
+        names(mydata_fold) <- c("fold","model","psill","nugget","rad_fit","range_exp","RMSE","R2","adj_R2","singularity")    
+        
+        # check if singular fit for at least one fold
+        ifelse( sum(mydata_fold$singularity)>0, sing_all<-TRUE, sing_all<-FALSE )
         
         # Create set of parameters/statistics as average of values got from 10 folds
-        par_new <- as.numeric(apply(X = mydata_fold[-c(1:2)],MARGIN = 2,FUN = mean))
+        par_new <- as.numeric(apply(X = mydata_fold[-c(1:2,10)],MARGIN = 2,FUN = mean))
         par_new <- data.frame(as.character(my_var_fit$model[2]), t(par_new),
-                              as.numeric(par["nmax"]), as.numeric(par_kri["nmin"]),
-                              as.numeric(par["omax"]), stringsAsFactors = F )
-        colnames(par_new) <- c("model","psill","nugget","rad_fit","rad_mod","rmse","r2","adj_r2","nmax","nmin","omax")
+                              as.numeric(par["nmax"]),as.numeric(par_intp["nmin"]),
+                              as.numeric(par["omax"]),as.character(sing_all),
+                              stringsAsFactors = F )
+        colnames(par_new) <- c("model","psill","nugget","rad_fit","rad_mod","rmse","r2","adj_r2","nmax","nmin","omax","singularity")
         
-        # statistics for ALL folds
+        # statistics for ALL folds (NAs will be omitted)
         rms <- RMSE(pred = val_out_df$ord_krig.predict, obs = val_out_df$VARIABLE, na.rm = T)
         r2 <- lm(formula = ord_krig.predict~VARIABLE, data = val_out_df)
         r2 <- c(summary(r2)$r.squared,summary(r2)$adj.r.squared)
 
-        # add statistics
+        # add statistics for ALL folds
         par_new <- data.frame(par_new,rms_alldata=rms,r2_alldata=r2[1],adj_r2_alldata=r2[2])
         mydata_out <- rbind(mydata_out, par_new)
         
@@ -162,7 +181,7 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
     # }# end loop on variogram distance
     # ###
     
-    # write output (parameters as average on folds)
+    # write output file with parameters
     dir.create(file.path(getwd(), var_name), recursive = T)
     print("Write total summary")
     write.csv(x = mydata_out,
