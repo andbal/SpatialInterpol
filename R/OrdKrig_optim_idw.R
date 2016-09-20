@@ -34,14 +34,14 @@ OrdKrig_optim_idw <- function(par = c(idp = 2.0, nmax=12, omax=3),
     # # to comment for the function version
     # par = c(idp = 2.0, nmax=12, omax=3)
     # par_intp = c(radius = 3000, nmin=1)
-    # wpath = "/mnt/alpenv/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
+    # wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
     # datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
     # variable = "Humus____"
     # kfold=10
     # local=TRUE
     # ###
     
-    # read table
+    # read table 
     worktab <- read.table(file = file.path(wpath, datafile), header = TRUE, sep = ",",dec = ".")
     worktab <- cbind(worktab$x_Coord, worktab$y_Coord, worktab[,variable])
   
@@ -99,24 +99,30 @@ OrdKrig_optim_idw <- function(par = c(idp = 2.0, nmax=12, omax=3),
     
     # Create set of parameters/statistics as average of values got from 10 folds
     par_new <- as.numeric(apply(X = mydata_fold[-c(1)],MARGIN = 2,FUN = mean))
-    par_new <- data.frame(t(par_new),
-                          as.numeric(par["nmax"]), as.numeric(par_intp["nmin"]),
-                          as.numeric(par["omax"]), stringsAsFactors = F )
-    colnames(par_new) <- c("rmse","r2","adj_r2","nmax","nmin","omax")
+    par_new <- data.frame(as.numeric(par["idp"]), as.numeric(par["nmax"]),
+                          as.numeric(par_intp["nmin"]), as.numeric(par["omax"]),
+                          t(par_new), stringsAsFactors = F )
+    colnames(par_new) <- c("idp","nmax","nmin","omax","rmse","r2","adj_r2")
     
     # statistics for ALL folds
     rms <- RMSE(pred = val_out_df$ord_krig.predict, obs = val_out_df$VARIABLE, na.rm = T)
     r2 <- lm(formula = ord_krig.predict~VARIABLE, data = val_out_df)
     r2 <- c(summary(r2)$r.squared,summary(r2)$adj.r.squared)
     
-    # add statistics
+    # add statistics for ALL folds
     par_new <- data.frame(par_new,rms_alldata=rms,r2_alldata=r2[1],adj_r2_alldata=r2[2])
     mydata_out <- rbind(mydata_out, par_new)
     
-  
+    # write output file with parameters
+    dir.create(file.path(getwd(), var_name), recursive = T)
+    print("Write total summary")
+    write.csv(x = mydata_out,
+              file = file.path(getwd(), var_name,
+                               paste(var_name,"_",par[1],"_",par[2],"_",par[3],".csv",sep = "")),
+              row.names = F,quote = F )
+    
     # return(RMSE(pred = val_out_df$ord_krig.predict, obs = val_out_df$VARIABLE, na.rm = T))
     return(r2[1])
-  
 }
 
 # # keep care: trade of between search distance and number of NA estimations

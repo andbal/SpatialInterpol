@@ -220,10 +220,9 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
 ## radius explain correlation between points -> will vary for each variables.
 ## Interpolation radius define the search area in which point where selected
 ## and used to interpolate a single pixel (following the model defined by
-## variogram) -> could be choosen as fixed value
+## variogram) -> could be choosen as fixed value indipendent from variable.
 #
 # hydroPSO::hydroPSO(fn = OrdKrig_optim_krige, method="spso2011",
 #                    lower = c(0,0,0.01,8,1,0), upper = c(1000,359,1,100,25,10),
 #                    control=list(drty.out = "/home/jbre/R/OrdKrig/PSO_krige", npart=40,
 #                                 parallel="none", par.pkgs = c("gstat","caret","hydroGOF","sp")))
-a <- OrdKrig_optim_krige()
