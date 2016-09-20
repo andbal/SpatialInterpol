@@ -169,9 +169,16 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
         colnames(par_new) <- c("model","psill","nugget","rad_fit","rad_mod","rmse","r2","adj_r2","nmax","nmin","omax","singularity")
         
         # statistics for ALL folds (NAs will be omitted)
+        # force statistic as NAs in case of singular fit. Necessary to avoid error in lm function.
+        if (sum(mydata_fold$singularity)==kfold){
+            print(paste("ALL folds have singular fit for distance ",k,". Interpolation statistics will be set to NAs.",sep = ""))
+            rms <- NA
+            r2 <- c(NA,NA)
+        } else {
         rms <- RMSE(pred = val_out_df$ord_krig.predict, obs = val_out_df$VARIABLE, na.rm = T)
         r2 <- lm(formula = ord_krig.predict~VARIABLE, data = val_out_df)
         r2 <- c(summary(r2)$r.squared,summary(r2)$adj.r.squared)
+        }
 
         # add statistics for ALL folds
         par_new <- data.frame(par_new,rms_alldata=rms,r2_alldata=r2[1],adj_r2_alldata=r2[2])
@@ -219,3 +226,4 @@ OrdKrig_optim_krige <- function(par = c(cutoff=300, nmax=12, omax=3),
 #                    lower = c(0,0,0.01,8,1,0), upper = c(1000,359,1,100,25,10),
 #                    control=list(drty.out = "/home/jbre/R/OrdKrig/PSO_krige", npart=40,
 #                                 parallel="none", par.pkgs = c("gstat","caret","hydroGOF","sp")))
+a <- OrdKrig_optim_krige()
