@@ -3,7 +3,11 @@
 # choose variables to use from colnames of namefile (see below)
 # "Bor__B__im","Humus____","Kali__K_O_","Kalkbedarf","Karbonate_","Kupfer__Cu","Magnesium_","Mangan__Mn","Phosphat__","pH_Wert__i","Zink__Zn__"
 
+# WINDOWS
 # wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
+# datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
+# LINUX
+# wpath = "/mnt/alpenv/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
 # datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
 
 # PAR       default     range
@@ -14,11 +18,6 @@
 # FIXED PAR
 #radius     3000    -> range for idw interpolation
 #nmin       1       -> minimum number of points inside range (idw interpolation)
-
-### IMPORTANT NOTE
-# "Model" need to be tested one at time!!!
-# Every fold may use a different model, and make no sense
-# do average on parameters related to different model.
 
 library(gstat)
 library(caret)
@@ -35,14 +34,14 @@ OrdKrig_optim_idw <- function(par = c(idp = 2.0, nmax=12, omax=3),
     # # to comment for the function version
     # par = c(idp = 2.0, nmax=12, omax=3)
     # par_intp = c(radius = 3000, nmin=1)
-    # wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
+    # wpath = "/mnt/alpenv/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
     # datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
     # variable = "Humus____"
     # kfold=10
     # local=TRUE
     # ###
     
-    # read table 
+    # read table
     worktab <- read.table(file = file.path(wpath, datafile), header = TRUE, sep = ",",dec = ".")
     worktab <- cbind(worktab$x_Coord, worktab$y_Coord, worktab[,variable])
   

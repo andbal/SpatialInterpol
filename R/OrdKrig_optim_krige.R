@@ -3,7 +3,11 @@
 # choose variables to use from colnames of namefile (see below)
 # "Bor__B__im","Humus____","Kali__K_O_","Kalkbedarf","Karbonate_","Kupfer__Cu","Magnesium_","Mangan__Mn","Phosphat__","pH_Wert__i","Zink__Zn__"
 
+# WINDOWS
 # wpath = "H:/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
+# datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
+# LINUX
+# wpath = "/mnt/alpenv/Projekte/MONALISA/05_Arbeitsbereiche/BaA/05_Soil_Interpolation/02_additional_maps"
 # datafile = "master/original_dataset/Masterfile_AdigeVenosta.txt"
 
 # PAR       default     range
