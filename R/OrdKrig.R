@@ -158,14 +158,14 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
       
     if (!inverseDistWeigths)
     {
-      # Choose parameters as function arguments
-      
-      # gstatVariogram - Calculate Sample variogram 
-      # my_var <- variogram(log(VARIABLE)~1, data=worktab, locations = ~X+Y, cutoff = cutoff[namezone])
-      # Fit a Variogram Model to a Sample Variogram  
-      # m <- vgm(psill = psill[namezone], model = model, range = cutoff[namezone], nugget = nugget[namezone], 
-      #          anis = c(anis_deg[namezone], anis_ax[namezone]))
-      # my_var_fit <- fit.variogram(my_var, m)
+    # Choose parameters as function arguments
+    
+    # gstatVariogram - Calculate Sample variogram 
+    # my_var <- variogram(log(VARIABLE)~1, data=worktab, locations = ~X+Y, cutoff = cutoff[namezone])
+    # Fit a Variogram Model to a Sample Variogram  
+    # m <- vgm(psill = psill[namezone], model = model, range = cutoff[namezone], nugget = nugget[namezone], 
+    #          anis = c(anis_deg[namezone], anis_ax[namezone]))
+    # my_var_fit <- fit.variogram(my_var, m)
         # Create model for variogram from calibration parameters (user input)
         my_var_fit <- vgm(psill = psill[namezone], model = model, range = cutoff[namezone], nugget = nugget[namezone])
     }
@@ -222,7 +222,7 @@ OrdKrig <- function ( wpath = "/home/jbre/R/OrdKrig",
           # IDW
           if (local) {
             ord_krig <- gstat::idw(formula = worktab$VARIABLE~1, worktab, mask_sppxdf, idp = idp[namezone],
-                                   nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = cutoff[namezone])
+                                   nmax = nmax[namezone], nmin = nmin[namezone], omax = omax[namezone], maxdist = radius[namezone])
             locglob <- "local"
           } else {
             ord_krig <- gstat::idw(formula = worktab$VARIABLE~1, worktab, mask_sppxdf, idp = idp[namezone])
