@@ -1,0 +1,10 @@
+#$ -N kri_01_nompi
+#$ -V
+#$ -pe mpich 16
+#$ -l h_rt=12:00:00
+##$ -q devel.q
+##$ -M andrea.balotti@eurac.edu
+##$ -m eas  # (b)egin / (e)nd / (a)bort / (s)uspend events sent via email
+
+R CMD BATCH cal_1000.R kri_01.Rout
+#mpirun -machinefile $TMPDIR/machines -np $NSLOTS R CMD BATCH cal_1000_mpi.R idw2_32_mpi.Rout
